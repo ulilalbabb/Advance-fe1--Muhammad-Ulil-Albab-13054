@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import getMovies from "../services/api/movie-endpoint";
+import axios from "axios";
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer, toast } from 'react-toastify';
 
 const BASE_URL = "https://671c56602c842d92c382a39e.mockapi.io/api/movie/movie";
 
@@ -9,15 +12,12 @@ const Admin = () => {
   const [currentMovie, setCurrentMovie] = useState({
       id: null,
       name: "",
-      series: "",
       rating: "",
-      image: "",
-
   });
 
   useEffect(() => {
     getMovies(setMovies);
-  });
+  }), [];
 
   const handelChange = (e) => {
     setCurrentMovie({
@@ -26,12 +26,39 @@ const Admin = () => {
     });
   };
 
+  const handelDelete = async (id) => {
+    await axios.delete(`${BASE_URL}/${id}`);
+    getMovies(setMovies);
+    toast.success("Movie deleted successfully!");
+  };
+
+  const handleEdit = (movie) => {
+    setEdit(true);
+    setCurrentMovie({
+      id: movie.id,
+      name: movie.name,
+      rating: movie.rating,
+    });
+
+  };
+
   const handelSubmit = async (e) => {
     e.preventDefault();
-    console.log(currentMovie);
+    const movieData = {
+      ...currentMovie,
+      rating: currentMovie.rating,
+    }
+
+    if (currentMovie.id) {
+      await axios.put(`${BASE_URL}/${currentMovie.id}`, movieData);
+      toast.success("Movie updated successfully!");
+    } else {
+      await axios.post(BASE_URL, movieData);
+      toast.success("Movie added successfully!");
+    }
     };
 
-
+    
       
 
   return (
@@ -39,7 +66,7 @@ const Admin = () => {
       <div className="my-5">
         <h1 className="text-2xl font-bold text-center">Movie & Series List</h1>
       </div>
-
+      <ToastContainer />
       <form 
       className="flex flex-col items-center"
       onSubmit={handelSubmit}
@@ -64,33 +91,6 @@ const Admin = () => {
           placeholder="Add series film"
           onChange={handelChange}
            />
-          {/* <label htmlFor="">Rating</label>
-          <input 
-          type="number"
-          name="rating"
-          id="rating"
-          className="border rounded-3xl w-full py-2 px-3  focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-          placeholder="Add rating film"
-          value={currentMovie.rating}
-          onChange={handelChange}
-           /> */}
-          {/* <label htmlFor="">Premium</label>
-          <div className="flex gap-2">
-          <input 
-          type="radio"
-          name="premium"
-          id="premium"
-          value="true"
-           />
-           <span>Yes</span>
-          <input 
-          type="radio"
-          name="premium"
-          id="premium"
-          value="false"
-           />
-           <span>No</span>
-          </div> */}
           <label htmlFor="">Rating</label>
           <input 
           type="number"
@@ -113,7 +113,7 @@ const Admin = () => {
       <table className="table-auto border-collapse w-full shadow-md mx-auto mb-5 text-center">
         <thead>
           <tr>
-            <th>Id</th>
+            <th>ID</th>
             <th>Name</th>
             <th>Series</th>
             <th>Rating</th>
@@ -126,20 +126,20 @@ const Admin = () => {
             <tr key={movie.id}>
               <td>{movie.id}</td>
               <td>{movie.name}</td>
-              <td>{movie.series === "movie" ? "Yes" : "null"}</td>
+              <td>{movie.series}</td>
               <td>{movie.rating}</td>
               <td>{movie.image}</td>
               <td>
                 <div>
                   <button
                     className="bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded-3xl"
-                    onClick={() => setEdit(true)}
+                    onClick={() => handleEdit(movie)}
                   >
                     Edit
                   </button>
                   <button
                     className="bg-red-500 hover:bg-red-700 text-white py-2 px-4 rounded-3xl"
-                    onClick={() => setEdit(true)}
+                    onClick={() => handelDelete(movie.id)}
                   >
                     Delete
                   </button>
